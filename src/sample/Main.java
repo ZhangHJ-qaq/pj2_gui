@@ -128,7 +128,7 @@ public class Main extends Application {
                     String line = scanner.nextLine();
                     String[] stations = line.split("[\t]");
                     finalResultBuilder.append(transferProblem.shortestPath(stations));
-                    finalResultBuilder.append("\n");
+                    finalResultBuilder.append("\n\n");
                     numberOfLines++;
                 }
 
@@ -192,6 +192,8 @@ public class Main extends Application {
         this.outputTextArea = (TextArea) root.lookup("#outputTextArea");
         this.go = (Button) root.lookup("#go");
         this.exportButton = (Button) root.lookup("#exportButton");
+
+        this.outputTextArea.setWrapText(true);
 
     }
 

@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class MetroPath {
+public class MetroPath{
     public LinkedList<MetroStation> metroStationList;
     private HashMap<Integer, MetroStation> numberToStation;
     private ArrayList<Double> transferPointList = new ArrayList<>();
@@ -29,7 +29,7 @@ public class MetroPath {
             double currentTransferPoint = transferPointList.get(i);
             MetroStation lastStationBeforeTransfer = this.metroStationList.get((int) Math.floor(currentTransferPoint));
 
-            builder.append("-").append(lastStationBeforeTransfer.getLineNumber()).append("-").append(
+            builder.append("-line").append(lastStationBeforeTransfer.getLineNumber()).append("-").append(
                     getStationNameWithoutLineNumber(lastStationBeforeTransfer)
             );
 
@@ -37,7 +37,7 @@ public class MetroPath {
 
         MetroStation lastStation = metroStationList.getLast();
 
-        builder.append("-").append(lastStation.getLineNumber()).append("-").append(
+        builder.append("-line").append(lastStation.getLineNumber()).append("-").append(
                 getStationNameWithoutLineNumber(lastStation)
         );
 

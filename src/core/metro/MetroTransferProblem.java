@@ -4,6 +4,7 @@ import core.graph.GeneralPath;
 import core.graph.UndirectedWeightedGraph;
 
 import java.io.File;
+import java.net.Inet4Address;
 import java.security.Key;
 import java.util.*;
 
@@ -71,39 +72,74 @@ public class MetroTransferProblem {
     }
 
     private MetroPath shortestPathBetweenTwoStations(String stationA, String stationB) throws StationNotFoundException, NoRouteException {
-        int stationNumberA = getStationNumber(stationA);
-        int stationNumberB = getStationNumber(stationB);
+
+        //这是两个所有可能的起点站与终点站的列表。比如如果stationA为“人民广场”，srcStationNumList中就含有1号线的人民广场
+        //2号线的人民广场和8号线的人民广场的编号
+        List<Integer> srcStationNumList = getStationNumber(stationA);
+        List<Integer> descStationNumList = getStationNumber(stationB);
 
 
-        GeneralPath targetGeneralPath = null;
+        ArrayList<GeneralPath> targetGeneralPathList = new ArrayList<>();
 
-        //如果已经对起点A使用过迪杰特斯拉算法了
-        if (shortestPathSave[stationNumberA][0] != null) {
-            targetGeneralPath = shortestPathSave[stationNumberA][stationNumberB];
+        for (int stationNumberA : srcStationNumList
+        ) {
 
-        }else {//如果对起点A没有进行过迪杰特斯拉算法，则需要计算一遍
+            for (int stationNumberB : descStationNumList
+            ) {
+                //如果已经对起点A使用过迪杰特斯拉算法了
+                if (shortestPathSave[stationNumberA][0] != null) {
 
-            GeneralPath[] pathsFromA = graph.shortestPath(stationNumberA);
+                    targetGeneralPathList.add(shortestPathSave[stationNumberA][stationNumberB]);
 
-            //得到目标的那条路
-            targetGeneralPath = pathsFromA[stationNumberB];
+                } else {//如果对起点A没有进行过迪杰特斯拉算法，则需要计算一遍
 
-            if (targetGeneralPath.route == null) {
-                throw new NoRouteException(String.format("在车站%s和%s之间没有找到路", stationA, stationB));
+                    GeneralPath[] pathsFromA = graph.shortestPath(stationNumberA);
+
+                    //得到目标的那条路
+                    GeneralPath path = pathsFromA[stationNumberB];
+
+                    if (path.route == null) {
+                        continue;
+                    }
+
+                    targetGeneralPathList.add(path);
+
+                    shortestPathSave[stationNumberA] = pathsFromA;
+
+                }
+
             }
-
-            shortestPathSave[stationNumberA] = pathsFromA;
 
         }
 
-        if (targetGeneralPath == null) {
+
+        if (targetGeneralPathList.size() == 0) {
             throw new StationNotFoundException("");
         }
 
-        MetroPath metroPath = new MetroPath(targetGeneralPath, this.numberToStation);
+        ArrayList<MetroPath> metroPathArrayList = new ArrayList<>();
+
+        for (GeneralPath generalPath : targetGeneralPathList
+        ) {
+            metroPathArrayList.add(new MetroPath(generalPath, this.numberToStation));
+
+        }
 
 
-        return metroPath;
+        //找到所有路径中换乘最少的
+        int currentMinNumberOfTransfer = metroPathArrayList.get(0).numberOfTransfer;
+        int index = 0;
+
+        for (int i = 0; i < metroPathArrayList.size(); i++) {
+            if (metroPathArrayList.get(i).numberOfTransfer < currentMinNumberOfTransfer) {
+                currentMinNumberOfTransfer = metroPathArrayList.get(i).numberOfTransfer;
+                index = i;
+            }
+
+        }
+
+        return metroPathArrayList.get(index);
+
     }
 
     /**
@@ -136,22 +172,27 @@ public class MetroTransferProblem {
      * 根据站名，获得一个站的编号
      *
      * @param stationName 例：海伦路（不带线路名）
-     * @return 有可能是四号线的海伦路站的编号，也有可能是6号线的海伦路站的编号
+     * @return 四号线海伦路站和六号线海伦路站的车站编号的list
      */
-    public int getStationNumber(String stationName) throws StationNotFoundException {
+    public List<Integer> getStationNumber(String stationName) throws StationNotFoundException {
 
+        ArrayList<Integer> list = new ArrayList<>();
 
         for (Map.Entry<Integer, MetroStation> entry : this.numberToStation.entrySet()
         ) {
             MetroStation station = entry.getValue();
 
             if (MetroPath.getStationNameWithoutLineNumber(station).equals(stationName)) {
-                return station.getStationNumber();
+                list.add(station.getStationNumber());
             }
 
         }
 
-        throw new StationNotFoundException("找不到站点" + stationName);
+        if (list.size() == 0) {
+            throw new StationNotFoundException("找不到站点" + stationName);
+        }
+
+        return list;
 
     }
 
